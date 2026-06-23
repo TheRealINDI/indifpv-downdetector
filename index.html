@@ -26,7 +26,7 @@
             padding: 2rem 2.5rem 2.5rem 2.5rem;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            max-width: 800px;
+            max-width: 900px;
             width: 100%;
         }
         h1 {
@@ -54,6 +54,9 @@
             padding: 40px 0;
             color: #dc3545;
         }
+        .table-wrapper {
+            overflow-x: auto;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -61,21 +64,23 @@
         }
         th {
             text-align: left;
-            font-weight: 500;
+            font-weight: 600;
             color: #495057;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #dee2e6;
+            padding: 0.7rem 0.5rem 0.7rem 0;
+            border-bottom: 2px solid #dee2e6;
         }
         td {
-            padding: 0.7rem 0;
+            padding: 0.7rem 0.5rem 0.7rem 0;
             border-bottom: 1px solid #f1f3f5;
         }
         .status-badge {
             display: inline-block;
             font-weight: 500;
             font-size: 0.8rem;
-            padding: 0.2rem 0.8rem;
+            padding: 0.25rem 0.9rem;
             border-radius: 20px;
+            min-width: 60px;
+            text-align: center;
         }
         .status-up {
             background-color: #d3f0df;
@@ -92,6 +97,10 @@
         .status-paused {
             background-color: #e2e3e5;
             color: #41464b;
+        }
+        .status-unknown {
+            background-color: #e9ecef;
+            color: #495057;
         }
         .footer {
             font-size: 0.8rem;
@@ -120,9 +129,27 @@
         .refresh-btn:hover {
             text-decoration: underline;
         }
-        #last-check {
+        .last-check {
             font-size: 0.8rem;
             color: #adb5bd;
+        }
+        .uptime-stats {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+        .uptime-stats span {
+            font-weight: 600;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+            }
+            td, th {
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
@@ -139,58 +166,72 @@
         </div>
 
         <div class="footer">
-            <span id="last-check">⏱ Laatste check: wordt geladen...</span>
+            <span class="last-check" id="last-check">⏱ Laatste check: wordt geladen...</span>
         </div>
     </div>
 
     <script>
-        // ⚙️ HIER ZET JE JE API KEY (dit is de veiligste manier voor GitHub Pages)
+        // ⚙️ JOUW UPTIMEROBOT API KEY
         const API_KEY = 'ur3595791-664734f585205048bea89d5a';
         
-        // 🌍 Hier kun je de regio's aanpassen zoals je wilt
-        const REGION_NAMES = {
-            'amsterdam': 'Amsterdam, NL',
-            'frankfurt': 'Frankfurt, DE',
-            'london': 'Londen, UK',
-            'newyork': 'New York, US',
-            'singapore': 'Singapore, SG',
-            'sydney': 'Sydney, AU'
+        // 🌍 Mooie namen voor je monitors (gebruik de EXACTE namen uit UptimeRobot)
+        // Let op: hoofdlettergevoelig!
+        const FRIENDLY_NAMES = {
+            'IndiFPV - Amsterdam': '🇳🇱 Amsterdam, NL',
+            'IndiFPV - Frankfurt': '🇩🇪 Frankfurt, DE',
+            'IndiFPV - London': '🇬🇧 Londen, UK',
+            'IndiFPV - New York': '🇺🇸 New York, US',
+            'IndiFPV - Singapore': '🇸🇬 Singapore, SG',
+            'IndiFPV - Sydney': '🇦🇺 Sydney, AU'
         };
+
+        // 📊 Kleuren voor de statusbalkjes
+        const STATUS_CONFIG = {
+            0: { class: 'status-paused', text: 'Pauze' },
+            1: { class: 'status-down', text: '🔴 Down' },
+            2: { class: 'status-up', text: '🟢 Up' },
+            8: { class: 'status-degraded', text: '🟡 Degraded' },
+            9: { class: 'status-down', text: '🔴 Down' }
+        };
+
+        let allMonitors = [];
 
         async function fetchStatus() {
             const contentDiv = document.getElementById('content');
             const lastCheckSpan = document.getElementById('last-check');
             
-            // Toon loading state
             contentDiv.innerHTML = '<div class="loading">⏳ Status wordt opgehaald...</div>';
             
             try {
-                // Haal data op van UptimeRobot API
-                const response = await fetch(`https://api.uptimerobot.com/v2/getMonitors?api_key=${API_KEY}&format=json&logs=0`);
+                const response = await fetch(
+                    `https://api.uptimerobot.com/v2/getMonitors?api_key=${API_KEY}&format=json&logs=1&response_times=1&custom_uptime_ratios=1-7-30-365`
+                );
                 
-                if (!response.ok) {
-                    throw new Error('Netwerkfout bij het ophalen van data');
-                }
+                if (!response.ok) throw new Error('Netwerkfout');
                 
                 const data = await response.json();
                 
                 if (data.stat !== 'ok') {
-                    throw new Error(data.error?.message || 'Onbekende fout van UptimeRobot');
+                    throw new Error(data.error?.message || 'Onbekende fout');
                 }
                 
-                // Verwerk de data
                 if (data.monitors && data.monitors.length > 0) {
-                    displayMonitors(data.monitors);
+                    allMonitors = data.monitors;
+                    displayMonitors(allMonitors);
                 } else {
-                    contentDiv.innerHTML = '<div class="error">⚠️ Geen monitors gevonden. Voeg eerst een monitor toe in UptimeRobot.</div>';
+                    contentDiv.innerHTML = `
+                        <div class="error">
+                            ⚠️ Geen monitors gevonden.<br>
+                            <small>Voeg monitors toe in UptimeRobot met namen zoals "IndiFPV - Amsterdam"</small>
+                        </div>
+                    `;
                 }
                 
-                // Update de tijd
                 const now = new Date();
-                lastCheckSpan.textContent = `⏱ Laatste check: ${now.toLocaleString('nl-NL')}`;
+                lastCheckSpan.textContent = `⏱ Laatste check: ${now.toLocaleString('nl-NL', { timeZone: 'Europe/Amsterdam' })}`;
                 
             } catch (error) {
-                contentDiv.innerHTML = `<div class="error">❌ Fout bij het ophalen: ${error.message}</div>`;
+                contentDiv.innerHTML = `<div class="error">❌ Fout: ${error.message}</div>`;
                 console.error('Error:', error);
             }
         }
@@ -198,83 +239,58 @@
         function displayMonitors(monitors) {
             const contentDiv = document.getElementById('content');
             
-            // Maak een tabel
-            let html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Regio / Service</th>
-                            <th>Status</th>
-                            <th>HTTP</th>
-                            <th>Latentie</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            let html = `<div class="table-wrapper"><table>
+                <thead>
+                    <tr>
+                        <th>Regio</th>
+                        <th>Status</th>
+                        <th>HTTP</th>
+                        <th>Latentie</th>
+                        <th>Uptime (7d)</th>
+                    </tr>
+                </thead>
+                <tbody>
             `;
             
             monitors.forEach(monitor => {
-                const statusClass = getStatusClass(monitor.status);
-                const statusText = getStatusText(monitor.status);
-                const friendlyName = getFriendlyName(monitor.friendly_name);
+                const status = STATUS_CONFIG[monitor.status] || STATUS_CONFIG[0];
+                const friendlyName = FRIENDLY_NAMES[monitor.friendly_name] || monitor.friendly_name;
+                const latency = monitor.response_times?.[0]?.value || '--';
+                const uptime = monitor.custom_uptime_ratio?.[1] || '--';
                 
                 html += `
                     <tr>
                         <td><strong>${friendlyName}</strong></td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td><span class="status-badge ${status.class}">${status.text}</span></td>
                         <td>${monitor.status === 2 ? '200' : '--'}</td>
-                        <td>${monitor.status === 2 ? '~' + Math.floor(Math.random() * 100 + 20) + ' ms' : '--'}</td>
+                        <td>${monitor.status === 2 ? latency + ' ms' : '--'}</td>
+                        <td>${uptime !== '--' ? uptime + '%' : '--'}</td>
                     </tr>
                 `;
             });
             
+            html += `</tbody></table></div>`;
+            
+            // 📊 Totaaloverzicht
+            const total = monitors.length;
+            const up = monitors.filter(m => m.status === 2).length;
+            const down = monitors.filter(m => m.status === 1 || m.status === 9).length;
+            
             html += `
-                    </tbody>
-                </table>
-                <div style="font-size:0.85rem;color:#6c757d;text-align:center;">
-                    ✅ ${monitors.length} locatie(s) gecontroleerd
+                <div class="uptime-stats">
+                    ✅ <span>${up}</span> online · 
+                    ❌ <span>${down}</span> offline · 
+                    📡 <span>${total}</span> locaties gecontroleerd
                 </div>
             `;
             
             contentDiv.innerHTML = html;
         }
 
-        function getStatusClass(status) {
-            switch(status) {
-                case 0: return 'status-paused';   // Pauze
-                case 1: return 'status-down';      // Offline
-                case 2: return 'status-up';        // Online
-                case 8: return 'status-degraded';   // Gedeeltelijk
-                case 9: return 'status-down';       // Offline
-                default: return 'status-paused';
-            }
-        }
-
-        function getStatusText(status) {
-            switch(status) {
-                case 0: return 'Pauze';
-                case 1: return 'Down';
-                case 2: return 'Up';
-                case 8: return 'Degraded';
-                case 9: return 'Down';
-                default: return 'Onbekend';
-            }
-        }
-
-        function getFriendlyName(name) {
-            // Als de naam in onze lijst staat, gebruik dan de mooie naam
-            const lowerName = name.toLowerCase();
-            for (const [key, value] of Object.entries(REGION_NAMES)) {
-                if (lowerName.includes(key)) {
-                    return value;
-                }
-            }
-            return name;
-        }
-
-        // 📋 Start de pagina met het ophalen van de status
+        // 📋 Start bij laden
         document.addEventListener('DOMContentLoaded', fetchStatus);
         
-        // 🔄 Ververs automatisch elke 5 minuten
+        // 🔄 Automatisch verversen elke 5 minuten
         setInterval(fetchStatus, 300000);
     </script>
 </body>
