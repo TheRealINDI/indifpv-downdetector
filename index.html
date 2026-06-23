@@ -384,7 +384,6 @@
 <body>
 
 <div class="container">
-    <!-- HEADER -->
     <div class="header">
         <div class="header-left">
             <h1>📡 IndiFPV Status</h1>
@@ -402,7 +401,6 @@
         </div>
     </div>
 
-    <!-- STATUS CARD -->
     <div class="status-card" id="statusCard">
         <div>
             <div class="label">Current Status</div>
@@ -420,7 +418,6 @@
         </div>
     </div>
 
-    <!-- CONTENT -->
     <div id="content">
         <div class="loading-state">
             <div class="spinner"></div>
@@ -428,7 +425,6 @@
         </div>
     </div>
 
-    <!-- FOOTER -->
     <div class="footer">
         <div>
             <span id="lastCheck">⏱ Checking...</span>
@@ -454,7 +450,7 @@
     };
 
     // ============================================================
-    // 🚀 FETCH STATUS - MET CORS WORKAROUND
+    // 🚀 FETCH STATUS - Directe API call met POST
     // ============================================================
     async function fetchStatus() {
         const content = document.getElementById('content');
@@ -468,15 +464,31 @@
         `;
 
         try {
-            // Gebruik een CORS-proxy om het CORS-probleem te omzeilen
-            const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            const apiUrl = `https://api.uptimerobot.com/v2/getMonitors?api_key=${API_KEY}&format=json&logs=1&response_times=1&custom_uptime_ratios=1-7-30-365`;
-            
-            const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
-            
-            if (!response.ok) throw new Error('Network error');
-            
+            // UptimeRobot API vereist een POST request
+            const response = await fetch('https://api.uptimerobot.com/v2/getMonitors', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Cache-Control': 'no-cache'
+                },
+                body: new URLSearchParams({
+                    api_key: API_KEY,
+                    format: 'json',
+                    logs: '1',
+                    response_times: '1',
+                    custom_uptime_ratios: '1-7-30-365'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
+
+            if (data.stat !== 'ok') {
+                throw new Error(data.error?.message || 'Unknown error from UptimeRobot');
+            }
 
             if (!data.monitors || data.monitors.length === 0) {
                 content.innerHTML = `
@@ -497,7 +509,6 @@
             // Als die niet gevonden wordt, gebruik de eerste monitor
             if (!monitor) {
                 monitor = data.monitors[0];
-                console.log('Using first monitor:', monitor.friendly_name);
             }
 
             renderMonitor(monitor);
