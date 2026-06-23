@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IndiFPV Status</title>
+    <title>IndiFPV Status - Europe</title>
     <style>
-        /* ===== RESET & BASE ===== */
         * {
             margin: 0;
             padding: 0;
@@ -26,7 +25,6 @@
             --accent-yellow: #d29922;
             --shadow: 0 8px 32px rgba(0,0,0,0.4);
             --radius: 16px;
-            --transition: all 0.2s ease;
         }
 
         body {
@@ -41,7 +39,6 @@
             margin: 0;
         }
 
-        /* ===== GLOW BACKGROUND ===== */
         body::before {
             content: '';
             position: fixed;
@@ -49,8 +46,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle at 30% 40%, rgba(88, 166, 255, 0.03) 0%, transparent 60%),
-                        radial-gradient(circle at 70% 60%, rgba(63, 185, 80, 0.02) 0%, transparent 50%);
+            background: radial-gradient(circle at 30% 40%, rgba(88, 166, 255, 0.03) 0%, transparent 60%);
             pointer-events: none;
             z-index: 0;
         }
@@ -62,11 +58,9 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius);
             padding: 2.5rem;
-            max-width: 950px;
+            max-width: 750px;
             width: 100%;
             box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
-            transition: var(--transition);
         }
 
         /* ===== HEADER ===== */
@@ -93,7 +87,20 @@
             color: var(--text-secondary);
             font-size: 0.95rem;
             margin-top: 0.15rem;
-            font-weight: 400;
+        }
+
+        .europe-tag {
+            display: inline-block;
+            background: var(--bg-card);
+            color: var(--accent-blue);
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.15rem 0.6rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-left: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .header-right {
@@ -113,7 +120,6 @@
             letter-spacing: 0.06em;
             padding: 0.25rem 0.7rem;
             border-radius: 20px;
-            opacity: 0.9;
             animation: pulse-badge 2s infinite;
         }
 
@@ -130,7 +136,7 @@
             border-radius: 8px;
             font-size: 0.8rem;
             cursor: pointer;
-            transition: var(--transition);
+            transition: all 0.2s ease;
             font-weight: 500;
             display: flex;
             align-items: center;
@@ -153,47 +159,66 @@
             fill: currentColor;
         }
 
-        /* ===== STATUS BAR ===== */
-        .status-bar {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
+        /* ===== STATUS CARD ===== */
+        .status-card {
             background: var(--bg-card);
             border-radius: 12px;
-            padding: 1rem 1.5rem;
+            padding: 1.5rem 2rem;
             margin: 1.2rem 0 1.8rem 0;
             border: 1px solid var(--border-color);
-        }
-
-        .status-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .status-card .label {
             color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
         }
 
-        .status-item .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            flex-shrink: 0;
+        .status-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
         }
-        .dot-green { background: var(--accent-green); }
-        .dot-red { background: var(--accent-red); }
-        .dot-yellow { background: var(--accent-yellow); }
-        .dot-gray { background: var(--text-muted); }
 
-        .status-item strong {
-            color: var(--text-primary);
+        .status-card .value.online {
+            color: var(--accent-green);
+        }
+        .status-card .value.offline {
+            color: var(--accent-red);
+        }
+        .status-card .value.degraded {
+            color: var(--accent-yellow);
+        }
+
+        .status-card .details {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .status-card .details .item {
+            text-align: center;
+        }
+
+        .status-card .details .item .num {
+            font-size: 1.4rem;
             font-weight: 600;
+        }
+
+        .status-card .details .item .lbl {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         /* ===== TABLE ===== */
         .table-wrapper {
             overflow-x: auto;
-            margin-bottom: 0.5rem;
             border-radius: 12px;
             border: 1px solid var(--border-color);
         }
@@ -239,9 +264,6 @@
             align-items: center;
             gap: 8px;
         }
-        .monitor-name .flag {
-            font-size: 1.2rem;
-        }
 
         /* ===== STATUS BADGES ===== */
         .status-badge {
@@ -283,26 +305,6 @@
         .status-degraded .dot-small { background: var(--accent-yellow); }
         .status-paused .dot-small { background: var(--text-muted); }
 
-        /* ===== LATENCY BAR ===== */
-        .latency-bar {
-            display: inline-block;
-            height: 4px;
-            border-radius: 4px;
-            background: var(--bg-card);
-            width: 60px;
-            margin-right: 8px;
-            vertical-align: middle;
-            overflow: hidden;
-        }
-        .latency-bar .fill {
-            height: 100%;
-            border-radius: 4px;
-            background: var(--accent-blue);
-            transition: width 0.5s ease;
-        }
-        .latency-bar .fill.slow { background: var(--accent-yellow); }
-        .latency-bar .fill.very-slow { background: var(--accent-red); }
-
         .latency-text {
             font-size: 0.8rem;
             color: var(--text-secondary);
@@ -326,22 +328,10 @@
         .footer a {
             color: var(--accent-blue);
             text-decoration: none;
-            transition: var(--transition);
         }
         .footer a:hover {
             text-decoration: underline;
             color: #79c0ff;
-        }
-
-        .footer .stats {
-            display: flex;
-            gap: 1.2rem;
-            flex-wrap: wrap;
-        }
-        .footer .stats span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
         }
 
         /* ===== LOADING / ERROR ===== */
@@ -354,6 +344,7 @@
             color: var(--text-secondary);
             gap: 1rem;
         }
+
         .loading-state .spinner {
             width: 36px;
             height: 36px;
@@ -362,6 +353,7 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
@@ -371,6 +363,7 @@
             padding: 2.5rem 1rem;
             color: var(--accent-red);
         }
+
         .error-state .icon {
             font-size: 2.5rem;
             margin-bottom: 0.5rem;
@@ -381,18 +374,17 @@
             .container { padding: 1.2rem; }
             .header { flex-direction: column; }
             .header-right { width: 100%; justify-content: flex-start; }
-            .status-bar { flex-direction: column; gap: 0.5rem; padding: 0.8rem 1rem; }
+            .status-card { flex-direction: column; align-items: stretch; text-align: center; }
+            .status-card .details { justify-content: center; }
             th, td { padding: 0.6rem 0.7rem; font-size: 0.8rem; }
             .footer { flex-direction: column; align-items: flex-start; }
-            .footer .stats { gap: 0.8rem; }
-            .latency-bar { width: 40px; }
         }
 
         @media (max-width: 480px) {
-            .container { padding: 0.8rem; border-radius: 12px; }
+            .container { padding: 0.8rem; }
             .header-left h1 { font-size: 1.5rem; }
-            .status-item { font-size: 0.75rem; }
-            .status-badge { font-size: 0.65rem; padding: 0.1rem 0.6rem; }
+            .status-card .value { font-size: 1.4rem; }
+            .status-card .details .item .num { font-size: 1.1rem; }
         }
     </style>
 </head>
@@ -403,7 +395,10 @@
     <div class="header">
         <div class="header-left">
             <h1>📡 IndiFPV Status</h1>
-            <div class="subtitle">Real-time monitoring for IndiFPV services</div>
+            <div class="subtitle">
+                Real-time monitoring from Europe
+                <span class="europe-tag">🇪🇺 EU</span>
+            </div>
         </div>
         <div class="header-right">
             <span class="badge-live">● Live</span>
@@ -414,12 +409,22 @@
         </div>
     </div>
 
-    <!-- STATUS BAR (dynamisch gevuld) -->
-    <div class="status-bar" id="statusBar">
-        <div class="status-item"><span class="dot dot-green"></span> <strong id="countUp">0</strong> Online</div>
-        <div class="status-item"><span class="dot dot-red"></span> <strong id="countDown">0</strong> Offline</div>
-        <div class="status-item"><span class="dot dot-yellow"></span> <strong id="countDegraded">0</strong> Degraded</div>
-        <div class="status-item"><span class="dot dot-gray"></span> <strong id="countTotal">0</strong> Total</div>
+    <!-- STATUS CARD -->
+    <div class="status-card" id="statusCard">
+        <div>
+            <div class="label">Current Status</div>
+            <div class="value online" id="mainStatus">● Online</div>
+        </div>
+        <div class="details">
+            <div class="item">
+                <div class="num" id="uptimeDisplay">--</div>
+                <div class="lbl">Uptime (7d)</div>
+            </div>
+            <div class="item">
+                <div class="num" id="latencyDisplay">--</div>
+                <div class="lbl">Latency</div>
+            </div>
+        </div>
     </div>
 
     <!-- CONTENT -->
@@ -435,9 +440,8 @@
         <div>
             <span id="lastCheck">⏱ Checking...</span>
         </div>
-        <div class="stats">
+        <div>
             <span>🔗 <a href="https://indifpv.org" target="_blank">indifpv.org</a></span>
-            <span>⚡ <span id="avgLatency">--</span> avg</span>
         </div>
     </div>
 </div>
@@ -447,16 +451,6 @@
     // ⚙️ CONFIGURATION
     // ============================================================
     const API_KEY = 'ur3595791-664734f585205048bea89d5a';
-
-    // Friendly names & flags — match EXACT names from UptimeRobot
-    const REGION_MAP = {
-        'IndiFPV - Amsterdam': { flag: '🇳🇱', label: 'Amsterdam' },
-        'IndiFPV - Frankfurt':  { flag: '🇩🇪', label: 'Frankfurt' },
-        'IndiFPV - London':     { flag: '🇬🇧', label: 'London' },
-        'IndiFPV - New York':   { flag: '🇺🇸', label: 'New York' },
-        'IndiFPV - Singapore':  { flag: '🇸🇬', label: 'Singapore' },
-        'IndiFPV - Sydney':     { flag: '🇦🇺', label: 'Sydney' }
-    };
 
     const STATUS_CONFIG = {
         0: { class: 'status-paused',   label: 'Paused' },
@@ -496,17 +490,17 @@
                         <div class="icon">⚠️</div>
                         <h3>No monitors found</h3>
                         <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.3rem;">
-                            Add monitors in UptimeRobot with names like "IndiFPV - Amsterdam"
+                            Add a monitor in UptimeRobot for indifpv.org
                         </p>
                     </div>
                 `;
-                updateFooter(data.monitors || []);
                 return;
             }
 
-            renderTable(data.monitors);
-            updateStatusBar(data.monitors);
-            updateFooter(data.monitors);
+            // Take the first monitor (you only have one with Europe region)
+            const monitor = data.monitors[0];
+            renderMonitor(monitor);
+            updateStatusCard(monitor);
 
             const now = new Date();
             lastCheck.textContent = `⏱ Last check: ${now.toLocaleString('en-US', { timeZone: 'Europe/London' })}`;
@@ -527,96 +521,87 @@
     }
 
     // ============================================================
-    // 📊 RENDER TABLE
+    // 📊 RENDER MONITOR
     // ============================================================
-    function renderTable(monitors) {
+    function renderMonitor(monitor) {
         const content = document.getElementById('content');
+        const status = STATUS_CONFIG[monitor.status] || STATUS_CONFIG[0];
+        const latency = monitor.response_times?.[0]?.value || 0;
+        const uptime = monitor.custom_uptime_ratio?.[1] || '--';
 
-        let html = `<div class="table-wrapper"><table>
-            <thead><tr>
-                <th>Location</th>
-                <th>Status</th>
-                <th>HTTP</th>
-                <th>Latency</th>
-                <th>Uptime (7d)</th>
-            </tr></thead><tbody>`;
+        let html = `
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Status</th>
+                            <th>HTTP</th>
+                            <th>Latency</th>
+                            <th>Uptime (7d)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="monitor-name">
+                                    🇪🇺 ${monitor.friendly_name}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-badge ${status.class}">
+                                    <span class="dot-small"></span> ${status.label}
+                                </span>
+                            </td>
+                            <td>${monitor.status === 2 ? '200' : '—'}</td>
+                            <td>
+                                <span class="latency-text">${monitor.status === 2 ? latency + ' ms' : '—'}</span>
+                            </td>
+                            <td>${uptime !== '--' ? uptime + '%' : '—'}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
 
-        monitors.forEach(m => {
-            const status = STATUS_CONFIG[m.status] || STATUS_CONFIG[0];
-            const region = REGION_MAP[m.friendly_name] || { flag: '🌐', label: m.friendly_name };
-            const latency = m.response_times?.[0]?.value || 0;
-            const uptime = m.custom_uptime_ratio?.[1] || '--';
+        // Add region info
+        html += `
+            <div style="margin-top:0.8rem;font-size:0.8rem;color:var(--text-secondary);text-align:center;border-top:1px solid var(--border-color);padding-top:0.8rem;">
+                🌍 Monitoring from <strong>Europe</strong> · ${monitor.interval / 60} min interval
+            </div>
+        `;
 
-            // Latency bar
-            let barClass = '';
-            let barWidth = Math.min((latency / 400) * 100, 100);
-            if (latency > 300) barClass = 'very-slow';
-            else if (latency > 150) barClass = 'slow';
-
-            html += `
-                <tr>
-                    <td>
-                        <div class="monitor-name">
-                            <span class="flag">${region.flag}</span>
-                            ${region.label}
-                        </div>
-                    </td>
-                    <td><span class="status-badge ${status.class}">
-                        <span class="dot-small"></span> ${status.label}
-                    </span></td>
-                    <td>${m.status === 2 ? '200' : '—'}</td>
-                    <td>
-                        <span class="latency-bar">
-                            <span class="fill ${barClass}" style="width:${barWidth}%;"></span>
-                        </span>
-                        <span class="latency-text">${m.status === 2 ? latency + ' ms' : '—'}</span>
-                    </td>
-                    <td>${uptime !== '--' ? uptime + '%' : '—'}</td>
-                </tr>
-            `;
-        });
-
-        html += `</tbody></table></div>`;
         content.innerHTML = html;
     }
 
     // ============================================================
-    // 📈 UPDATE STATUS BAR
+    // 📈 UPDATE STATUS CARD
     // ============================================================
-    function updateStatusBar(monitors) {
-        const total = monitors.length;
-        const up = monitors.filter(m => m.status === 2).length;
-        const down = monitors.filter(m => m.status === 1 || m.status === 9).length;
-        const degraded = monitors.filter(m => m.status === 8).length;
+    function updateStatusCard(monitor) {
+        const status = STATUS_CONFIG[monitor.status] || STATUS_CONFIG[0];
+        const mainStatus = document.getElementById('mainStatus');
+        const uptimeDisplay = document.getElementById('uptimeDisplay');
+        const latencyDisplay = document.getElementById('latencyDisplay');
 
-        document.getElementById('countUp').textContent = up;
-        document.getElementById('countDown').textContent = down;
-        document.getElementById('countDegraded').textContent = degraded;
-        document.getElementById('countTotal').textContent = total;
-    }
+        // Main status
+        const isOnline = monitor.status === 2;
+        mainStatus.textContent = isOnline ? '● Online' : '● ' + status.label;
+        mainStatus.className = 'value ' + (isOnline ? 'online' : monitor.status === 8 ? 'degraded' : 'offline');
 
-    // ============================================================
-    // 📋 UPDATE FOOTER
-    // ============================================================
-    function updateFooter(monitors) {
-        const avg = document.getElementById('avgLatency');
-        const valid = monitors
-            .filter(m => m.status === 2 && m.response_times?.[0]?.value)
-            .map(m => m.response_times[0].value);
+        // Uptime
+        const uptime = monitor.custom_uptime_ratio?.[1] || '--';
+        uptimeDisplay.textContent = uptime !== '--' ? uptime + '%' : '--';
 
-        if (valid.length === 0) {
-            avg.textContent = '--';
-            return;
-        }
-        const average = Math.round(valid.reduce((a, b) => a + b, 0) / valid.length);
-        avg.textContent = average + ' ms';
+        // Latency
+        const latency = monitor.response_times?.[0]?.value || 0;
+        latencyDisplay.textContent = monitor.status === 2 ? latency + ' ms' : '--';
     }
 
     // ============================================================
     // 🔄 AUTO-START
     // ============================================================
     document.addEventListener('DOMContentLoaded', fetchStatus);
-    setInterval(fetchStatus, 300000); // every 5 min
+    setInterval(fetchStatus, 300000);
 </script>
 
 </body>
